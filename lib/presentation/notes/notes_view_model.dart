@@ -12,11 +12,14 @@ class NotesViewModel with ChangeNotifier {
 
   NotesState get state => _state;
 
-  NotesViewModel(this.useCases);
+  Note? recentlyDeletedNote;
+
+  NotesViewModel(this.useCases) {
+    _loadNotes();
+  }
 
   void onEvent(NotesEvent event) {
     event.when(
-      loadNotes: _loadNotes,
       deleteNote: _deleteNote,
       restoreNote: _restoreNote,
     );
@@ -32,9 +35,17 @@ class NotesViewModel with ChangeNotifier {
 
   void _deleteNote(Note note) async {
     await useCases.deleteNote(note);
+    recentlyDeletedNote = note;
+
+    _loadNotes();
   }
 
   void _restoreNote() async {
+    if (recentlyDeletedNote != null) {
+      await useCases.addNote(recentlyDeletedNote!);
+      recentlyDeletedNote = null;
 
+      _loadNotes();
+    }
   }
 }
