@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/data/data_source/local/note_data_source.dart';
 import 'package:note_app/data/repository/note_repository_impl.dart';
-import 'package:note_app/domain/repository/note_repository.dart';
 import 'package:note_app/domain/use_case/add_note_use_case.dart';
 import 'package:note_app/domain/use_case/delete_note_use_case.dart';
 import 'package:note_app/domain/use_case/get_note_use_case.dart';
@@ -11,7 +10,6 @@ import 'package:note_app/domain/use_case/update_note_use_case.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_view_model.dart';
 import 'package:note_app/presentation/notes/notes_view_model.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
 import 'package:sqflite/sqflite.dart';
 
 void main() async {
@@ -27,51 +25,27 @@ void main() async {
     },
   );
 
-  // 2. 다른 클래스에 의존하지 않는 Model
-  List<SingleChildWidget> independentModels = [
-    Provider<NoteDataSource>(
-      create: (context) => NoteDataSource(db),
-    ),
-  ];
+  final dataSource = NoteDataSource(db);
+  final repository = NoteRepositoryImpl(dataSource);
+  final useCases = NoteUseCases(
+    getNotes: GetNotesUseCase(repository),
+    deleteNote: DeleteNoteUseCase(repository),
+    addNote: AddNoteUseCase(repository),
+    updateNote: UpdateNoteUseCase(repository),
+    getNote: GetNoteUseCase(repository),
+  );
 
-// 3. 2에 등록한 클래스에 의존하는 Model
-  List<SingleChildWidget> dependentModels = [
-    ProxyProvider<NoteDataSource, NoteRepository>(
-      update: (context, noteDataSource, _) =>
-          NoteRepositoryImpl(noteDataSource),
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<NotesViewModel>(
+            create: (context) => NotesViewModel(useCases)),
+        ChangeNotifierProvider<AddEditNoteViewModel>(
+            create: (context) => AddEditNoteViewModel(useCases)),
+      ],
+      child: const MyApp(),
     ),
-    ProxyProvider<NoteRepository, NoteUseCases>(
-      update: (context, repository, _) => NoteUseCases(
-        getNotes: GetNotesUseCase(repository),
-        deleteNote: DeleteNoteUseCase(repository),
-        addNote: AddNoteUseCase(repository),
-        updateNote: UpdateNoteUseCase(repository),
-        getNote: GetNoteUseCase(repository),
-      ),
-    ),
-  ];
-
-// 4. ViewModels
-// View가 사용. 2, 3에 등록한 클래스를 사용할 수 있음
-  List<SingleChildWidget> viewModels = [
-    ChangeNotifierProvider<NotesViewModel>(
-      create: (context) => NotesViewModel(context.read<NoteUseCases>()),
-    ),
-    ChangeNotifierProvider<AddEditNoteViewModel>(
-      create: (context) => AddEditNoteViewModel(context.read<NoteUseCases>()),
-    ),
-  ];
-
-  List<SingleChildWidget> globalProviders = [
-    ...independentModels,
-    ...dependentModels,
-    ...viewModels,
-  ];
-
-  runApp(MultiProvider(
-    providers: globalProviders,
-    child: const MyApp(),
-  ));
+  );
 }
 
 class MyApp extends StatelessWidget {
