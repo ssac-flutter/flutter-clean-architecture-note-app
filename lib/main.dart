@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:note_app/di/provider_setup.dart';
+import 'package:note_app/presentation/notes/notes_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      home: const NotesScreen(),
     );
   }
 }
