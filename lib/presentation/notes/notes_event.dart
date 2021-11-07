@@ -5,8 +5,9 @@ part 'notes_event.freezed.dart';
 
 @freezed
 abstract class NotesEvent with _$NotesEvent {
-
   const factory NotesEvent.deleteNote(Note note) = DeleteNote;
 
   const factory NotesEvent.restoreNote() = RestoreNote;
+
+  const factory NotesEvent.loadNotes() = LoadNotes;
 }

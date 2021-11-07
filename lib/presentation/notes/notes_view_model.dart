@@ -20,6 +20,7 @@ class NotesViewModel with ChangeNotifier {
 
   void onEvent(NotesEvent event) {
     event.when(
+      loadNotes: _loadNotes,
       deleteNote: _deleteNote,
       restoreNote: _restoreNote,
     );
