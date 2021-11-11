@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:note_app/core/data_case.dart';
 import 'package:note_app/domain/model/note.dart';
@@ -6,15 +8,15 @@ import 'package:note_app/presentation/notes/notes_event.dart';
 import 'package:note_app/presentation/notes/notes_state.dart';
 
 class NotesViewModel with ChangeNotifier {
-  NoteUseCases useCases;
+  final NoteUseCases _useCases;
 
   NotesState _state = NotesState();
 
   NotesState get state => _state;
 
-  Note? recentlyDeletedNote;
+  Note? _recentlyDeletedNote;
 
-  NotesViewModel(this.useCases) {
+  NotesViewModel(this._useCases) {
     _loadNotes();
   }
 
@@ -22,11 +24,12 @@ class NotesViewModel with ChangeNotifier {
     event.when(
       deleteNote: _deleteNote,
       restoreNote: _restoreNote,
+      loadNotes: _loadNotes,
     );
   }
 
   void _loadNotes() async {
-    List<Note> notes = await useCases.getNotes(NoParams());
+    List<Note> notes = await _useCases.getNotes(NoParams());
     _state = state.copyWith(
       notes: notes,
     );
@@ -34,16 +37,16 @@ class NotesViewModel with ChangeNotifier {
   }
 
   void _deleteNote(Note note) async {
-    await useCases.deleteNote(note);
-    recentlyDeletedNote = note;
+    await _useCases.deleteNote(note);
+    _recentlyDeletedNote = note;
 
     _loadNotes();
   }
 
   void _restoreNote() async {
-    if (recentlyDeletedNote != null) {
-      await useCases.addNote(recentlyDeletedNote!);
-      recentlyDeletedNote = null;
+    if (_recentlyDeletedNote != null) {
+      await _useCases.addNote(_recentlyDeletedNote!);
+      _recentlyDeletedNote = null;
 
       _loadNotes();
     }

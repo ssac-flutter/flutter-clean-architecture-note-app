@@ -2,12 +2,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:note_app/presentation/notes/components/file_stack.dart';
+import 'package:note_app/presentation/notes/notes_event.dart';
+import 'package:note_app/presentation/notes/notes_view_model.dart';
+import 'package:provider/provider.dart';
 
 class NotesScreen extends StatelessWidget {
   const NotesScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<NotesViewModel>();
+    final state = viewModel.state;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xBE63E3C8),
@@ -38,22 +45,54 @@ class NotesScreen extends StatelessWidget {
             height: 20.0,
           ),
           Column(
-            children: [
-              fileStack(),
-              fileStack(),
-              fileStack(),
-              fileStack(),
-              fileStack(),
-            ],
+            children: state.notes
+                .map((note) => GestureDetector(
+                      onTap: () async {
+                        bool? isChanged = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  AddEditNoteScreen(note: note)),
+                        );
+
+                        if (isChanged != null && isChanged) {
+                          viewModel.onEvent(const NotesEvent.loadNotes());
+                        }
+                      },
+                      child: FileStack(
+                        note: note,
+                        onDeleteTap: (note) {
+                          viewModel.onEvent(NotesEvent.deleteNote(note));
+
+                          final snackBar = SnackBar(
+                            content: const Text('선택한 노트를 삭제했습니다.'),
+                            action: SnackBarAction(
+                              label: '취소',
+                              onPressed: () {
+                                viewModel
+                                    .onEvent(const NotesEvent.restoreNote());
+                              },
+                            ),
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        },
+                      ),
+                    ))
+                .toList(),
           )
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
-          Navigator.push(
+        onPressed: () async {
+          bool? isChanged = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddEditNoteScreen()),
           );
+
+          if (isChanged != null && isChanged) {
+            viewModel.onEvent(const NotesEvent.loadNotes());
+          }
         },
         child: const Icon(Icons.add),
         backgroundColor: const Color(0xFF25CBA5),
@@ -66,7 +105,8 @@ class NotesScreen extends StatelessWidget {
       children: [
         Container(
           alignment: Alignment.center,
-          child: Image.network('https://raw.githubusercontent.com/kyoungkyoung/flutter-clean-architecture-note-app/master/img/roseBudfolder.png'),
+          child: Image.network(
+              'https://raw.githubusercontent.com/kyoungkyoung/flutter-clean-architecture-note-app/master/img/roseBudfolder.png'),
         ),
         // Positioned(top: 20, left: 20, child: Text('노트 제목')),
         Container(
@@ -78,46 +118,6 @@ class NotesScreen extends StatelessWidget {
           child: const Icon(Icons.delete),
         ),
       ],
-    );
-  }
-
-  Container fileStack() {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE7ED9B),
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      child: Stack(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
-                '파일 제목',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-              SizedBox(
-                height: 15,
-              ),
-              Text(
-                '내용',
-                style: TextStyle(
-                  fontSize: 12,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            alignment: Alignment.bottomRight,
-            child: const Icon(Icons.delete),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -39,13 +39,19 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
       // 구독
       _streamSubscription = viewModel.eventStream.listen((event) {
         event.when(saveNote: () {
-          Navigator.pop(context);
+          Navigator.pop(context, true);
         }, showSnackBar: (message) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(message)),
           );
         });
       });
+
+      if (widget.note != null) {
+        _titleTextController.text = widget.note!.title;
+        _contentTextController.text = widget.note!.content;
+        viewModel.onEvent(AddEditNoteEvent.changeColor(widget.note!.color));
+      }
 
     });
   }
