@@ -19,6 +19,7 @@ class AddEditNoteScreen extends StatefulWidget {
 class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   final TextEditingController _titleTextController = TextEditingController();
   final TextEditingController _contentTextController = TextEditingController();
+  StreamSubscription? _streamSubscription;
 
   final _colorList = [
     app_color.roseBud.value,
@@ -29,7 +30,29 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      final viewModel = context.read<AddEditNoteViewModel>();
+
+      // 구독
+      _streamSubscription = viewModel.eventStream.listen((event) {
+        event.when(saveNote: () {
+          Navigator.pop(context);
+        }, showSnackBar: (message) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message)),
+          );
+        });
+      });
+
+    });
+  }
+
+  @override
   void dispose() {
+    _streamSubscription?.cancel();
     _titleTextController.dispose();
     _contentTextController.dispose();
     super.dispose();
@@ -41,17 +64,11 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (_titleTextController.text.isEmpty ||
-              _contentTextController.text.isEmpty) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('제목 또는 내용을 입력해주세요.'),
-            ));
-            return;
-          }
-
-          // context.read<AddEditNoteViewModel>().onEvent(
-          //     AddEditNoteEvent.saveNote(widget.note?.id,
-          //         _titleTextController.text, _contentTextController.text));
+          viewModel.onEvent(AddEditNoteEvent.saveNote(
+            widget.note?.id,
+            _titleTextController.text,
+            _contentTextController.text,
+          ));
         },
         child: const Icon(Icons.create),
       ),
@@ -79,15 +96,15 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
                     children: _colorList
                         .map(
                           (color) => InkWell(
-                        onTap: () {
-                          _changeBackgroundColor(color);
-                        },
-                        child: _buildBackgroundSelector(
-                          color: color,
-                          selected: viewModel.color == color,
-                        ),
-                      ),
-                    )
+                            onTap: () {
+                              _changeBackgroundColor(color);
+                            },
+                            child: _buildBackgroundSelector(
+                              color: color,
+                              selected: viewModel.color == color,
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ),
@@ -154,6 +171,6 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
   void _changeBackgroundColor(int color) {
     final viewModel = context.read<AddEditNoteViewModel>();
-    // viewModel.onEvent(AddEditNoteEvent.changeColor(color));
+    viewModel.onEvent(AddEditNoteEvent.changeColor(color));
   }
 }
