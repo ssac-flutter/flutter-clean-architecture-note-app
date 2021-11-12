@@ -1,7 +1,5 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:note_app/core/data_case.dart';
 import 'package:note_app/domain/model/note.dart';
 import 'package:note_app/domain/use_case/note_use_cases.dart';
 import 'package:note_app/presentation/notes/notes_event.dart';
@@ -29,7 +27,7 @@ class NotesViewModel with ChangeNotifier {
   }
 
   void _loadNotes() async {
-    List<Note> notes = await _useCases.getNotes(NoParams());
+    List<Note> notes = await _useCases.getNotes(state.noteOrder);
     _state = state.copyWith(
       notes: notes,
     );
