@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:note_app/domain/util/note_order.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:note_app/presentation/notes/components/file_stack.dart';
+import 'package:note_app/presentation/notes/components/order_section.dart';
 import 'package:note_app/presentation/notes/notes_event.dart';
 import 'package:note_app/presentation/notes/notes_view_model.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +30,12 @@ class NotesScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
         children: [
+          OrderSection(
+            noteOrder: state.noteOrder,
+            onOrderChanged: (NoteOrder newNoteOrder) {
+              viewModel.onEvent(NotesEvent.changeOrder(newNoteOrder));
+            },
+          ),
           GridView.count(
             crossAxisCount: 3,
             childAspectRatio: 2.0 / 1.5,
