@@ -7,12 +7,9 @@ void main() async {
   // 플랫폼 채널의 위젯 바인딩을 보장
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(
-    MultiProvider(
-      providers: await getProviders(),
-      child: const MyApp(),
-    ),
-  );
+  await getProviders();
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const NotesScreen(),
+      home: NotesScreen(),
     );
   }
 }

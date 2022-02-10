@@ -1,19 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:note_app/domain/model/note.dart';
 import 'package:note_app/domain/use_case/note_use_cases.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_event.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_ui_event.dart';
 import 'package:note_app/ui/colors.dart';
 
-class AddEditNoteViewModel with ChangeNotifier {
+class AddEditNoteViewModel extends GetxController {
   NoteUseCases useCases;
 
   AddEditNoteViewModel(this.useCases);
 
   int _color = roseBud.value;
-  int get color => _color;
+  Rx<int> get color => _color.obs;
 
   // 브로드캐스트 스트림
   final _eventController = StreamController<AddEditNoteUiEvent>.broadcast();
@@ -56,6 +57,5 @@ class AddEditNoteViewModel with ChangeNotifier {
 
   void _changeColor(int color) {
     _color = color;
-    notifyListeners();
   }
 }

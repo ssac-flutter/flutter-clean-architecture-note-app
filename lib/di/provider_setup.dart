@@ -1,3 +1,4 @@
+import 'package:get/get.dart';
 import 'package:note_app/data/data_source/local/note_data_source.dart';
 import 'package:note_app/data/repository/note_repository_impl.dart';
 import 'package:note_app/domain/use_case/add_note_use_case.dart';
@@ -12,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:sqflite/sqflite.dart';
 
-Future<List<SingleChildWidget>> getProviders() async {
+Future<void> getProviders() async {
   final db = await openDatabase(
     'notes.db',
     version: 1,
@@ -32,10 +33,6 @@ Future<List<SingleChildWidget>> getProviders() async {
     getNote: GetNoteUseCase(repository),
   );
 
-  return [
-    ChangeNotifierProvider<NotesViewModel>(
-        create: (context) => NotesViewModel(useCases)),
-    ChangeNotifierProvider<AddEditNoteViewModel>(
-        create: (context) => AddEditNoteViewModel(useCases)),
-  ];
+  Get.put(NotesViewModel(useCases));
+  Get.put(AddEditNoteViewModel(useCases));
 }

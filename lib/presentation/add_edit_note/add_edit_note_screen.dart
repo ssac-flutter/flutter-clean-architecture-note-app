@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:note_app/domain/model/note.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_event.dart';
 import 'package:note_app/presentation/add_edit_note/add_edit_note_view_model.dart';
@@ -29,31 +30,28 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
     app_color.skyBlue.value,
   ];
 
+  final viewModel = Get.find<AddEditNoteViewModel>();
+
   @override
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      final viewModel = context.read<AddEditNoteViewModel>();
-
-      // 구독
-      _streamSubscription = viewModel.eventStream.listen((event) {
-        event.when(saveNote: () {
-          Navigator.pop(context, true);
-        }, showSnackBar: (message) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message)),
-          );
-        });
+    // 구독
+    _streamSubscription = viewModel.eventStream.listen((event) {
+      event.when(saveNote: () {
+        Navigator.pop(context, true);
+      }, showSnackBar: (message) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
       });
-
-      if (widget.note != null) {
-        _titleTextController.text = widget.note!.title;
-        _contentTextController.text = widget.note!.content;
-        viewModel.onEvent(AddEditNoteEvent.changeColor(widget.note!.color));
-      }
-
     });
+
+    if (widget.note != null) {
+      _titleTextController.text = widget.note!.title;
+      _contentTextController.text = widget.note!.content;
+      viewModel.onEvent(AddEditNoteEvent.changeColor(widget.note!.color));
+    }
   }
 
   @override
@@ -66,83 +64,84 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<AddEditNoteViewModel>();
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          viewModel.onEvent(AddEditNoteEvent.saveNote(
-            widget.note?.id,
-            _titleTextController.text,
-            _contentTextController.text,
-          ));
-        },
-        child: const Icon(Icons.create),
-      ),
-      body: SafeArea(
-        child: AnimatedContainer(
-          color: Color(viewModel.color),
-          duration: const Duration(milliseconds: 300),
-          child: ListView(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16.0,
-                  horizontal: 6.0,
-                ),
-                child: Text(
-                  widget.note == null ? '노트 작성' : '노트 편집',
-                  style: const TextStyle(
-                      fontSize: 36.0, fontWeight: FontWeight.bold),
-                ),
-              ),
-              SizedBox(
-                child: FittedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _colorList
-                        .map(
-                          (color) => InkWell(
+    return Obx(() =>
+        Scaffold(
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              viewModel.onEvent(AddEditNoteEvent.saveNote(
+                widget.note?.id,
+                _titleTextController.text,
+                _contentTextController.text,
+              ));
+            },
+            child: const Icon(Icons.create),
+          ),
+          body: SafeArea(
+            child: AnimatedContainer(
+              color: Color(viewModel.color.value),
+              duration: const Duration(milliseconds: 300),
+              child: ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 6.0,
+                    ),
+                    child: Text(
+                      widget.note == null ? '노트 작성' : '노트 편집',
+                      style: const TextStyle(
+                          fontSize: 36.0, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(
+                    child: FittedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: _colorList
+                            .map(
+                              (color) => InkWell(
                             onTap: () {
                               _changeBackgroundColor(color);
                             },
                             child: _buildBackgroundSelector(
                               color: color,
-                              selected: viewModel.color == color,
+                              selected: viewModel.color.value == color,
                             ),
                           ),
                         )
-                        .toList(),
+                            .toList(),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16.0),
-              Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _titleTextController,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '제목 입력...',
-                      ),
+                  const SizedBox(height: 16.0),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _titleTextController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '제목 입력...',
+                          ),
+                        ),
+                        TextField(
+                          controller: _contentTextController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '내용 입력...',
+                          ),
+                          keyboardType: TextInputType.multiline,
+                          maxLines: null,
+                        ),
+                      ],
                     ),
-                    TextField(
-                      controller: _contentTextController,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: '내용 입력...',
-                      ),
-                      keyboardType: TextInputType.multiline,
-                      maxLines: null,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        )
     );
   }
 
